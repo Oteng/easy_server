@@ -1,0 +1,15 @@
+{
+  "name": "easy_server",
+  "version": "1.0.0",
+  "description": "Easy Server: A light weight webserver built on expressjs with inspiration from JAX-RS",
+  "main": "app.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "expressjs",
+    "webserver"
+  ],
+  "author": "oteng kwaku <otengkwaku@gmail.com>",
+  "license": "ISC"
+}
