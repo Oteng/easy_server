@@ -2,7 +2,7 @@
   "name": "easy_server",
   "version": "1.0.0",
   "description": "Easy Server: A light weight webserver built on expressjs with inspiration from JAX-RS",
-  "main": "app.ts",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,5 +11,34 @@
     "webserver"
   ],
   "author": "oteng kwaku <otengkwaku@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "swagger-ui-express": "^5.0.1",
+    "typescript": "^5.7.2",
+    "moment": "^2.30.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.1.0",
+    "@types/swagger-ui-express": "^4.1.6",
+    "@types/cors": "^2.8.17",
+    "@types/jsonwebtoken": "^9.0.6",
+    "eslint": "^9.16.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-n": "^17.14.0",
+    "eslint-plugin-promise": "^7.2.1",
+    "nodemon": "^3.1.7",
+    "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2"
+  }
 }

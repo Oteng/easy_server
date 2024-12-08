@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EasyServer API Spec",
+    "description": "This is the default swagger spec for EasyServer",
+    "version": "0.1"
+  },
+  "components": {}
+}
