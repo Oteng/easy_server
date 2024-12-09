@@ -12,6 +12,14 @@
   ],
   "author": "oteng kwaku <otengkwaku@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Oteng/easy_server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Oteng/easy_server/issues"
+  },
+  "homepage": "https://github.com/Oteng/easy_server#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
