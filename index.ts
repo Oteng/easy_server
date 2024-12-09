@@ -1,4 +1,4 @@
-import { ControllerConfig, EasyServeConfig } from "@/interfaces";
+import { ControllerConfig, EasyServeConfig } from "./src/interfaces";
 import * as fs from 'fs';
 import ExpressApp, { Express } from "express";
 import path from "node:path";
@@ -26,7 +26,7 @@ export class EasyServe {
     };
     EasyServe.app.use(cors(corsOptions));
     EasyServe.app.use(ExpressApp.json())
-    EasyServe.app.listen(option.port)
+    EasyServe.app.listen(option.port || 8018)
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
