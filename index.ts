@@ -1,4 +1,4 @@
-import { ControllerConfig, EasyServeConfig } from "./src/interfaces";
+import { ControllerConfig, EasyServeConfig, Injectable } from "./src/interfaces";
 import * as fs from 'fs';
 import ExpressApp, { Express } from "express";
 import path from "node:path";
@@ -6,12 +6,27 @@ import * as swaggerUi from 'swagger-ui-express';
 import * as SwaggerSpec from './swaggerSpec.json'
 import cors from "cors"
 import helmet from "helmet";
+import { InjectableException } from "@/Exceptions/InjectableException";
 // import { ErrorRequestHandler, Express } from "express-serve-static-core";
 // import { DBConnector } from "../src/model/BaseModel";
 
 
 export class EasyServe {
   private static readonly app: Express = ExpressApp();
+  private static inject: { [ key: string ]: Injectable<any> } = {};
+
+  public static getInjectable(name: string): Injectable<any> {
+    if ( EasyServe.inject[ name ] == null )
+      throw new InjectableException(name)
+    return EasyServe.inject[ name ];
+  }
+
+  public static setInjectable(name: string, fn: Injectable<any>): Injectable<any> {
+    if ( EasyServe.inject[ name ] == null )
+      throw new InjectableException(name)
+    return EasyServe.inject[ name ] = fn;
+  }
+
 
   public static getApp() {
     if ( EasyServe.app == null )

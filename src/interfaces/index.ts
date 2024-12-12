@@ -38,3 +38,9 @@ export interface SwaggerConfig {
 export interface ControllerConfig {
   root: string
 }
+
+export interface Injectable<T> {
+  instance: T | undefined,
+
+  configure(): void
+}
