@@ -6,24 +6,22 @@ import * as swaggerUi from 'swagger-ui-express';
 import * as SwaggerSpec from './swaggerSpec.json'
 import cors from "cors"
 import helmet from "helmet";
-import { InjectableException } from "@/Exceptions/InjectableException";
+import { InjectableException } from "./src/Exceptions/InjectableException";
 // import { ErrorRequestHandler, Express } from "express-serve-static-core";
 // import { DBConnector } from "../src/model/BaseModel";
 
 
 export class EasyServe {
   private static readonly app: Express = ExpressApp();
-  private static inject: { [ key: string ]: Injectable<any> } = {};
+  private static inject: { [ key: string ]: Injectable } = {};
 
-  public static getInjectable(name: string): Injectable<any> {
+  public static getInjectable(name: string): Injectable {
     if ( EasyServe.inject[ name ] == null )
       throw new InjectableException(name)
     return EasyServe.inject[ name ];
   }
 
-  public static setInjectable(name: string, fn: Injectable<any>): Injectable<any> {
-    if ( EasyServe.inject[ name ] == null )
-      throw new InjectableException(name)
+  public static setInjectable(name: string, fn: Injectable): Injectable {
     return EasyServe.inject[ name ] = fn;
   }
 
@@ -45,20 +43,8 @@ export class EasyServe {
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
-
-    // //connect to the database
-    // if ( option.dbConfigPath ) {
-    //   let rootPath = process.cwd();
-    //   import(path.join(rootPath, option.dbConfigPath)).then(async dbConfig => {
-    //     const dbConnector = new DBConnector(dbConfig)
-    //     await dbConnector.connect();
-    //     this.setControllerConfig(option.controller)
-    //     this.set500Responds(option.errorHandler)
-    //   })
-    // } else {
-    //   this.setControllerConfig(option.controller)
-    //   this.set500Responds(option.errorHandler)
-    // }
+    this.loadAutoWire(option.injectables).then(() => {
+    })
 
     this.setControllerConfig(option.controller)
 
@@ -79,6 +65,24 @@ export class EasyServe {
 
   }
 
+  private async loadAutoWire(option: { root: string }): Promise<void> {
+    /**
+     * Load all classes that are in the autowired folder to set them up
+     * before any other thing else can run.
+     * This design should be replaced with a problem build system that will do these setups
+     */
+    let rootPath = process.cwd();
+    let autoWiredClasses = fs.readdirSync(option.root);
+    for ( let autoWiredClass of autoWiredClasses ) {
+      if ( !( autoWiredClass.endsWith("js") || autoWiredClass.endsWith("ts") ) )
+        continue;
+      let nameOfClass = autoWiredClass.split('.')[ 0 ];
+      if ( nameOfClass == undefined )
+        continue;
+      await import(path.join(rootPath, option.root, nameOfClass));
+    }
+  }
+
   public setControllerConfig(option: ControllerConfig) {
     let rootPath = process.cwd();
 
@@ -93,7 +97,6 @@ export class EasyServe {
         continue;
 
       allRoutesAdded++;
-      // import the class will run the decorator which will setup the route
       import(path.join(rootPath, option.root, nameOfController)).then(_ => {
         allRoutesAdded--;
       }).catch(err => {

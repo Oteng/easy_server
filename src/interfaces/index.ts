@@ -27,6 +27,7 @@ export interface EasyServeConfig {
   port?: string | number,
   controller: ControllerConfig,
   swagger?: SwaggerConfig
+  injectables: { root: string }
 }
 
 export interface SwaggerConfig {
@@ -39,8 +40,5 @@ export interface ControllerConfig {
   root: string
 }
 
-export interface Injectable<T> {
-  instance: T | undefined,
-
-  configure(): void
+export interface Injectable {
 }
