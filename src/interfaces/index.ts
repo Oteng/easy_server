@@ -42,3 +42,9 @@ export interface ControllerConfig {
 
 export interface Injectable {
 }
+
+export interface ValidatorTemplate {
+  fieldName: string;
+  displayName?: string;
+  rules: string[] // ('REQUIRED' | 'MINLENGTH[*]')[]
+}

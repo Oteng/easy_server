@@ -43,10 +43,13 @@ export class EasyServe {
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
+
+    //TODO: Need to load autowired classes before classes that inject them are loaded.
+    //this can be done better using webpack build or other building tools. or we will just have to build out own bundling tool
     this.loadAutoWire(option.injectables).then(() => {
+      this.setControllerConfig(option.controller)
     })
 
-    this.setControllerConfig(option.controller)
 
     console.log(`Application started on http://localhost:${ option.port }`)
 
