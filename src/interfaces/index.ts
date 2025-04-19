@@ -27,7 +27,8 @@ export interface EasyServeConfig {
   port?: string | number,
   controller: ControllerConfig,
   swagger?: SwaggerConfig
-  injectables: { root: string }
+  injectables: { root: string },
+  payloadLimit?: string
 }
 
 export interface SwaggerConfig {

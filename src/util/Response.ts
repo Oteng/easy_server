@@ -37,4 +37,9 @@ export class ESResponse {
       }
     )
   }
+
+  public faild(){
+    this.status = "false";
+    return this.send()
+  }
 }
