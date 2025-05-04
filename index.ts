@@ -14,7 +14,9 @@ import {InjectableException} from "./src/Exceptions/InjectableException";
 export class EasyServe {
     private static readonly app: Express = ExpressApp();
     private static inject: { [key: string]: Injectable } = {};
-    options: EasyServeConfig;
+    private options: EasyServeConfig;
+    private serverInstance: any;
+
 
     public static getInjectable(name: string): Injectable {
         if (EasyServe.inject[name] == null)
@@ -42,7 +44,7 @@ export class EasyServe {
         EasyServe.app.use(ExpressApp.json({
             limit: this.options.payloadLimit || '1mb'
         }))
-        EasyServe.app.listen(this.options.port || 8018)
+        this.serverInstance = EasyServe.app.listen(this.options.port || 8018)
 
         EasyServe.app.use(helmet())
         EasyServe.app.disable('x-powered-by')
@@ -68,6 +70,10 @@ export class EasyServe {
         }
 
         this.set404Responds();
+    }
+
+    public stopServer(){
+        this.serverInstance?.close();
     }
 
     constructor(option: EasyServeConfig) {

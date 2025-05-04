@@ -9,7 +9,7 @@ export class JWT {
         {
           algorithm: 'HS256',
           expiresIn: '1d',
-          notBefore: '1s'
+          // notBefore: '1s'
         }, (err, token) => {
           if ( err ) {
             reject(err);
