@@ -14,9 +14,13 @@ import {InjectableException} from "./src/Exceptions/InjectableException";
 export class EasyServe {
     private static readonly app: Express = ExpressApp();
     private static inject: { [key: string]: Injectable } = {};
+    public static logger: any
     private options: EasyServeConfig;
     private serverInstance: any;
 
+    constructor(option: EasyServeConfig) {
+        this.options = option;
+    }
 
     public static getInjectable(name: string): Injectable {
         if (EasyServe.inject[name] == null)
@@ -28,7 +32,6 @@ export class EasyServe {
         return EasyServe.inject[name] = fn;
     }
 
-
     public static getApp() {
         if (EasyServe.app == null)
             throw new TypeError("EasyServe has not been instantiated")
@@ -36,6 +39,13 @@ export class EasyServe {
     }
 
     public async start() {
+
+        //let us set the logger before anything runs
+        if (!this.options.logger) {
+            EasyServe.logger = (await import("./src/util/Logger")).default
+            EasyServe.logger.default
+        } else EasyServe.logger = this.options.logger;
+
         const corsOptions = {
             origin: '*',
             optionsSuccessStatus: 200,
@@ -54,12 +64,12 @@ export class EasyServe {
         await this.loadAutoWire(this.options.injectables);
         await this.setControllerConfig(this.options.controller);
 
-        console.log(`Application started on http://localhost:${this.options.port}`)
+        EasyServe.logger.info(`Application started on http://localhost:${this.options.port}`)
 
         //log every route that get called
         if (process.env.NODE_ENV !== 'production') {
             EasyServe.app.use((req, _, next) => {
-                console.log(`${req.method.toUpperCase()}: ${req.path}`)
+                EasyServe.logger.info(`${req.method.toUpperCase()}: ${req.path}`)
                 next();
             })
         }
@@ -72,30 +82,8 @@ export class EasyServe {
         this.set404Responds();
     }
 
-    public stopServer(){
+    public stopServer() {
         this.serverInstance?.close();
-    }
-
-    constructor(option: EasyServeConfig) {
-        this.options = option;
-    }
-
-    private async loadAutoWire(option: { root: string }): Promise<void> {
-        /**
-         * Load all classes that are in the autowired folder to set them up
-         * before any other thing else can run.
-         * This design should be replaced with a problem build system that will do these setups
-         */
-        let rootPath = process.cwd();
-        let autoWiredClasses = fs.readdirSync(path.join(rootPath, option.root));
-        for (let autoWiredClass of autoWiredClasses) {
-            if (!(autoWiredClass.endsWith("js") || autoWiredClass.endsWith("ts")))
-                continue;
-            let nameOfClass = autoWiredClass.split('.')[0];
-            if (nameOfClass == undefined)
-                continue;
-            await import(path.join(rootPath, option.root, nameOfClass));
-        }
     }
 
     public async setControllerConfig(option: ControllerConfig) {
@@ -119,6 +107,12 @@ export class EasyServe {
         // this.reSetTimeOutCheck(allRoutesAdded)
     }
 
+    public set404Responds(option?: string) {
+        EasyServe.app.use((_, res, __) => {
+            res.status(404).json(option || "Sorry can't find that!")
+        })
+    }
+
 
     // private reSetTimeOutCheck(allRoutesAdded: number) {
     //     setTimeout(() => {
@@ -128,10 +122,22 @@ export class EasyServe {
     //     }, 100)
     // }
 
-    public set404Responds(option?: string) {
-        EasyServe.app.use((_, res, __) => {
-            res.status(404).json(option || "Sorry can't find that!")
-        })
+    private async loadAutoWire(option: { root: string }): Promise<void> {
+        /**
+         * Load all classes that are in the autowired folder to set them up
+         * before any other thing else can run.
+         * This design should be replaced with a problem build system that will do these setups
+         */
+        let rootPath = process.cwd();
+        let autoWiredClasses = fs.readdirSync(path.join(rootPath, option.root));
+        for (let autoWiredClass of autoWiredClasses) {
+            if (!(autoWiredClass.endsWith("js") || autoWiredClass.endsWith("ts")))
+                continue;
+            let nameOfClass = autoWiredClass.split('.')[0];
+            if (nameOfClass == undefined)
+                continue;
+            await import(path.join(rootPath, option.root, nameOfClass));
+        }
     }
 
     // public set500Responds(option: ErrorConfig) {

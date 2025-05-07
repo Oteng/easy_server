@@ -12,7 +12,7 @@ export class Validator {
                                 fieldName: item.fieldName,
                                 msg: `${item.displayName} is required`
                             });
-                        } else if (value[item.fieldName].length <= 0)
+                        } else if (value[item.fieldName]?.length <= 0)
                             problems.push({
                                 fieldName: item.fieldName,
                                 msg: `${item.displayName} is required`
