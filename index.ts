@@ -14,6 +14,7 @@ import { InjectableException } from "./src/Exceptions/InjectableException";
 export class EasyServe {
   private static readonly app: Express = ExpressApp();
   private static inject: { [ key: string ]: Injectable } = {};
+  public static key: string = "";
 
   public static getInjectable(name: string): Injectable {
     if ( EasyServe.inject[ name ] == null )
@@ -43,6 +44,7 @@ export class EasyServe {
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
+    EasyServe.key = option.key;
 
     //TODO: Need to load autowired classes before classes that inject them are loaded.
     //this can be done better using webpack build or other building tools. or we will just have to build out own bundling tool
