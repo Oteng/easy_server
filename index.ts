@@ -14,7 +14,17 @@ import { InjectableException } from "./src/Exceptions/InjectableException";
 export class EasyServe {
   private static readonly app: Express = ExpressApp();
   private static inject: { [ key: string ]: Injectable } = {};
-  public static key: string = "";
+  public static logger: any
+  private options: EasyServeConfig;
+  private serverInstance: any;
+  static key: string
+
+  constructor(option: EasyServeConfig) {
+    this.options = option;
+    if ( option.key )
+      EasyServe.key = option.key
+    else throw new Error("JWT ENCRYPTION KEY not provied")
+  }
 
   public static getInjectable(name: string): Injectable {
     if ( EasyServe.inject[ name ] == null )
@@ -26,51 +36,95 @@ export class EasyServe {
     return EasyServe.inject[ name ] = fn;
   }
 
-
   public static getApp() {
     if ( EasyServe.app == null )
       throw new TypeError("EasyServe has not been instantiated")
     return EasyServe.app
   }
 
-  constructor(option: EasyServeConfig) {
+  public async start() {
+
+    //let us set the logger before anything runs
+    if ( !this.options.logger ) {
+      EasyServe.logger = ( await import("./src/util/Logger") ).default
+      EasyServe.logger.default
+    } else EasyServe.logger = this.options.logger;
+
     const corsOptions = {
       origin: '*',
       optionsSuccessStatus: 200,
     };
     EasyServe.app.use(cors(corsOptions));
-    EasyServe.app.use(ExpressApp.json())
-    EasyServe.app.listen(option.port || 8018)
+    EasyServe.app.use(ExpressApp.json({
+      limit: this.options.payloadLimit || '1mb'
+    }))
+    this.serverInstance = EasyServe.app.listen(this.options.port || 8018)
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
-    if(option.key)
-    EasyServe.key = option.key;
-    else throw new Error("JWT Encryption Key not specified")
 
     //TODO: Need to load autowired classes before classes that inject them are loaded.
     //this can be done better using webpack build or other building tools. or we will just have to build out own bundling tool
-    this.loadAutoWire(option.injectables).then(() => {
-      this.setControllerConfig(option.controller)
-    })
+    await this.loadAutoWire(this.options.injectables);
+    await this.setControllerConfig(this.options.controller);
 
-
-    console.log(`Application started on http://localhost:${ option.port }`)
+    EasyServe.logger.info(`Application started on http://localhost:${ this.options.port }`)
 
     //log every route that get called
     if ( process.env.NODE_ENV !== 'production' ) {
       EasyServe.app.use((req, _, next) => {
-        console.log(`${ req.method.toUpperCase() }: ${ req.path }`)
+        EasyServe.logger.info(`${ req.method.toUpperCase() }: ${ req.path }`)
         next();
       })
     }
 
     //setup swagger if object is not empty
-    if ( option.swagger != null ) {
-      EasyServe.app.use(`${ option.swagger.url || '/api/doc' }`, swaggerUi.serve, swaggerUi.setup(option.swagger.spec || SwaggerSpec, option.swagger.ui))
+    if ( this.options.swagger != null ) {
+      EasyServe.app.use(`${ this.options.swagger.url || '/api/doc' }`, swaggerUi.serve, swaggerUi.setup(this.options.swagger.spec || SwaggerSpec, this.options.swagger.ui))
     }
 
+    this.set404Responds();
   }
+
+  public stopServer() {
+    this.serverInstance?.close();
+  }
+
+  public async setControllerConfig(option: ControllerConfig) {
+    let rootPath = process.cwd();
+
+    // let allRoutesAdded: number = 0;
+
+    let controllers = fs.readdirSync(path.join(rootPath, option.root));
+    for ( let controller of controllers ) {
+      if ( !( controller.endsWith("js") || controller.endsWith("ts") ) )
+        continue;
+      let nameOfController = controller.split('.')[ 0 ];
+      if ( nameOfController == undefined )
+        continue;
+
+      // allRoutesAdded++;
+      await import(path.join(rootPath, option.root, nameOfController))
+      // allRoutesAdded--;
+
+    }
+    // this.reSetTimeOutCheck(allRoutesAdded)
+  }
+
+  public set404Responds(option?: string) {
+    EasyServe.app.use((_, res, __) => {
+      res.status(404).json(option || "Sorry can't find that!")
+    })
+  }
+
+
+  // private reSetTimeOutCheck(allRoutesAdded: number) {
+  //     setTimeout(() => {
+  //         if (allRoutesAdded <= 1)
+  //             this.set404Responds()
+  //         else this.reSetTimeOutCheck(allRoutesAdded);
+  //     }, 100)
+  // }
 
   private async loadAutoWire(option: { root: string }): Promise<void> {
     /**
@@ -79,7 +133,7 @@ export class EasyServe {
      * This design should be replaced with a problem build system that will do these setups
      */
     let rootPath = process.cwd();
-    let autoWiredClasses = fs.readdirSync(option.root);
+    let autoWiredClasses = fs.readdirSync(path.join(rootPath, option.root));
     for ( let autoWiredClass of autoWiredClasses ) {
       if ( !( autoWiredClass.endsWith("js") || autoWiredClass.endsWith("ts") ) )
         continue;
@@ -88,44 +142,6 @@ export class EasyServe {
         continue;
       await import(path.join(rootPath, option.root, nameOfClass));
     }
-  }
-
-  public setControllerConfig(option: ControllerConfig) {
-    let rootPath = process.cwd();
-
-    let allRoutesAdded: number = 0;
-
-    let controllers = fs.readdirSync(option.root);
-    for ( let controller of controllers ) {
-      if ( !( controller.endsWith("js") || controller.endsWith("ts") ) )
-        continue;
-      let nameOfController = controller.split('.')[ 0 ];
-      if ( nameOfController == undefined )
-        continue;
-
-      allRoutesAdded++;
-      import(path.join(rootPath, option.root, nameOfController)).then(_ => {
-        allRoutesAdded--;
-      }).catch(err => {
-        console.log(err);
-      });
-    }
-    this.reSetTimeOutCheck(allRoutesAdded)
-  }
-
-
-  private reSetTimeOutCheck(allRoutesAdded: number) {
-    setTimeout(() => {
-      if ( allRoutesAdded <= 1 )
-        this.set404Responds()
-      else this.reSetTimeOutCheck(allRoutesAdded);
-    }, 100)
-  }
-
-  public set404Responds(option?: string) {
-    EasyServe.app.use((_, res, __) => {
-      res.status(404).json(option || "Sorry can't find that!")
-    })
   }
 
   // public set500Responds(option: ErrorConfig) {

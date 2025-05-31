@@ -28,6 +28,8 @@ export interface EasyServeConfig {
   controller: ControllerConfig,
   swagger?: SwaggerConfig
   injectables: { root: string },
+  payloadLimit?: string,
+  logger?: any,
   key: string | undefined
 }
 

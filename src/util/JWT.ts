@@ -10,7 +10,7 @@ export class JWT {
         {
           algorithm: 'HS256',
           expiresIn: '1d',
-          notBefore: '1s'
+          // notBefore: '1s'
         }, (err, token) => {
           if ( err ) {
             reject(err);
@@ -26,17 +26,21 @@ export class JWT {
 
   public static async verify(token: string): Promise<any> {
     return new Promise<any>(async (resolve, reject) => {
-      jwt.verify(token, EasyServe.key,
-        (err, decoded) => {
-          if ( err ) {
-            reject(err);
-          } else {
-            if ( decoded == null )
-              reject("Token is invalid");
+      try {
+        jwt.verify(token, EasyServe.key,
+          (err, decoded) => {
+            if ( err ) {
+              reject(err);
+            } else {
+              if ( decoded == null )
+                reject("Token is invalid");
 
-            resolve(decoded);
-          }
-        })
+              resolve(decoded);
+            }
+          })
+      } catch ( e ) {
+        EasyServe.logger.error(e);
+      }
     })
   }
 }
