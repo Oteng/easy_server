@@ -44,7 +44,9 @@ export class EasyServe {
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
+    if(option.key)
     EasyServe.key = option.key;
+    else throw new Error("JWT Encryption Key not specified")
 
     //TODO: Need to load autowired classes before classes that inject them are loaded.
     //this can be done better using webpack build or other building tools. or we will just have to build out own bundling tool

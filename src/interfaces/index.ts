@@ -28,7 +28,7 @@ export interface EasyServeConfig {
   controller: ControllerConfig,
   swagger?: SwaggerConfig
   injectables: { root: string },
-  key: string
+  key: string | undefined
 }
 
 export interface SwaggerConfig {
