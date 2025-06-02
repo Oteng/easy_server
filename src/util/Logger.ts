@@ -1,5 +1,6 @@
 import winston from "winston";
 import 'winston-daily-rotate-file';
+import { EasyServe } from "../../index";
 
 export default winston.createLogger({
     level: 'info',
@@ -11,7 +12,7 @@ export default winston.createLogger({
         winston.format.splat(),
         winston.format.json()
     ),
-    defaultMeta: {service: 'default'},
+    defaultMeta: {service: EasyServe.service},
     transports: [
         new winston.transports.DailyRotateFile({
             filename: 'logs/EasyServe-%DATE%.log',

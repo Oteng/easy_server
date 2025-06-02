@@ -18,12 +18,14 @@ export class EasyServe {
   private options: EasyServeConfig;
   private serverInstance: any;
   static key: string
+  static service: string
 
   constructor(option: EasyServeConfig) {
     this.options = option;
     if ( option.key )
       EasyServe.key = option.key
     else throw new Error("JWT ENCRYPTION KEY not provied")
+    EasyServe.service = option.service
   }
 
   public static getInjectable(name: string): Injectable {
@@ -47,7 +49,6 @@ export class EasyServe {
     //let us set the logger before anything runs
     if ( !this.options.logger ) {
       EasyServe.logger = ( await import("./src/util/Logger") ).default
-      EasyServe.logger.default
     } else EasyServe.logger = this.options.logger;
 
     const corsOptions = {

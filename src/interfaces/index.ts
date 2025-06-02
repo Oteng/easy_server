@@ -30,7 +30,8 @@ export interface EasyServeConfig {
   injectables: { root: string },
   payloadLimit?: string,
   logger?: any,
-  key: string | undefined
+  key: string | undefined,
+  service: string
 }
 
 export interface SwaggerConfig {
