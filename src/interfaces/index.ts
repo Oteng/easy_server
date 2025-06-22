@@ -17,10 +17,11 @@ export interface ValidatorErrorTemplate {
   msg: string;
 }
 
-export interface JWTPayload {
+export interface JWTPayload extends Record<string, any>{
   type: string,
   username: string,
-  userId: number
+  userId: number,
+  permissions?: { [ key: string ]: boolean }
 }
 
 export interface EasyServeConfig {

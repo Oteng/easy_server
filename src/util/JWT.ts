@@ -1,4 +1,5 @@
 import * as jwt from "jsonwebtoken"
+// import { JwtPayload } from "jsonwebtoken"
 import { JWTPayload } from "../interfaces";
 import { EasyServe } from "../../index";
 
@@ -24,8 +25,8 @@ export class JWT {
     })
   }
 
-  public static async verify(token: string): Promise<any> {
-    return new Promise<any>(async (resolve, reject) => {
+  public static async verify(token: string): Promise<string | JWTPayload | undefined> {
+    return new Promise<string | JWTPayload | undefined>(async (resolve, reject) => {
       try {
         jwt.verify(token, EasyServe.key,
           (err, decoded) => {
@@ -35,6 +36,7 @@ export class JWT {
               if ( decoded == null )
                 reject("Token is invalid");
 
+              // @ts-ignore
               resolve(decoded);
             }
           })
