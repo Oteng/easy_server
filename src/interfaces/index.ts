@@ -21,7 +21,7 @@ export interface JWTPayload extends Record<string, any>{
   type: string,
   username: string,
   userId: number,
-  permissions?: { [ key: string ]: boolean }
+  permissions?: { [ key: string ]: string }
 }
 
 export interface EasyServeConfig {

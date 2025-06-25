@@ -16,13 +16,13 @@ export const Auth = (permissions?: String[]) => {
 
         // assuming permission is an object
         if ( permissions?.length ) {
-          if ( !payload.permissions || !payload.permissions.length ) {
+          if ( !payload.permissions || !Object.keys(payload.permissions).length ) {
             return new ESResponse(res).setMsg(`Access Denied. You don't have permission to perform this action: null`).send(403);
           }
           for ( const perm of permissions ) {
             // @ts-ignore
-            if ( payload.permissions[ perm ] )
-              return new ESResponse(res).setMsg(`Access Denied. You don't have permission to perform this action: ${perm}`).send(403);
+            if (!payload.permissions[ perm ] )
+              return new ESResponse(res).setMsg(`Access Denied. You don't have permission to perform this action: ${ perm }`).send(403);
           }
           // permissions.sort();
           // if ( !( payload?.perm?.every((val: string, idx: number) => val === permissions[ idx ]) ) )
