@@ -13,7 +13,7 @@ import { InjectableException } from "./src/Exceptions/InjectableException";
 
 export class EasyServe {
   private static readonly app: Express = ExpressApp();
-  private static inject: { [ key: string ]: Injectable } = {};
+  private static inject: { [key: string]: Injectable } = {};
   public static logger: any
   private options: EasyServeConfig;
   private serverInstance: any;
@@ -22,24 +22,24 @@ export class EasyServe {
 
   constructor(option: EasyServeConfig) {
     this.options = option;
-    if ( option.key )
+    if (option.key)
       EasyServe.key = option.key
     else throw new Error("JWT ENCRYPTION KEY not provied")
     EasyServe.service = option.service
   }
 
   public static getInjectable(name: string): Injectable {
-    if ( EasyServe.inject[ name ] == null )
+    if (EasyServe.inject[name] == null)
       throw new InjectableException(name)
-    return EasyServe.inject[ name ];
+    return EasyServe.inject[name];
   }
 
   public static setInjectable(name: string, fn: Injectable): Injectable {
-    return EasyServe.inject[ name ] = fn;
+    return EasyServe.inject[name] = fn;
   }
 
   public static getApp() {
-    if ( EasyServe.app == null )
+    if (EasyServe.app == null)
       throw new TypeError("EasyServe has not been instantiated")
     return EasyServe.app
   }
@@ -47,8 +47,8 @@ export class EasyServe {
   public async start() {
 
     //let us set the logger before anything runs
-    if ( !this.options.logger ) {
-      EasyServe.logger = ( await import("./src/util/Logger") ).default
+    if (!this.options.logger) {
+      EasyServe.logger = (await import("./src/util/Logger")).default
     } else EasyServe.logger = this.options.logger;
 
     const corsOptions = {
@@ -66,22 +66,23 @@ export class EasyServe {
 
     //TODO: Need to load autowired classes before classes that inject them are loaded.
     //this can be done better using webpack build or other building tools. or we will just have to build out own bundling tool
-    await this.loadAutoWire(this.options.injectables);
+    if (this.options.injectables)
+      await this.loadAutoWire(this.options.injectables);
     await this.setControllerConfig(this.options.controller);
 
-    EasyServe.logger.info(`Application started on http://localhost:${ this.options.port }`)
+    EasyServe.logger.info(`Application started on http://localhost:${this.options.port}`)
 
     //log every route that get called
-    if ( process.env.NODE_ENV !== 'production' ) {
+    if (process.env.NODE_ENV !== 'production') {
       EasyServe.app.use((req, _, next) => {
-        EasyServe.logger.info(`${ req.method.toUpperCase() }: ${ req.path }`)
+        EasyServe.logger.info(`${req.method.toUpperCase()}: ${req.path}`)
         next();
       })
     }
 
     //setup swagger if object is not empty
-    if ( this.options.swagger != null ) {
-      EasyServe.app.use(`${ this.options.swagger.url || '/api/doc' }`, swaggerUi.serve, swaggerUi.setup(this.options.swagger.spec || SwaggerSpec, this.options.swagger.ui))
+    if (this.options.swagger != null) {
+      EasyServe.app.use(`${this.options.swagger.url || '/api/doc'}`, swaggerUi.serve, swaggerUi.setup(this.options.swagger.spec || SwaggerSpec, this.options.swagger.ui))
     }
 
     this.set404Responds();
@@ -97,11 +98,11 @@ export class EasyServe {
     // let allRoutesAdded: number = 0;
 
     let controllers = fs.readdirSync(path.join(rootPath, option.root));
-    for ( let controller of controllers ) {
-      if ( !( controller.endsWith("js") || controller.endsWith("ts") ) )
+    for (let controller of controllers) {
+      if (!(controller.endsWith("js") || controller.endsWith("ts")))
         continue;
-      let nameOfController = controller.split('.')[ 0 ];
-      if ( nameOfController == undefined )
+      let nameOfController = controller.split('.')[0];
+      if (nameOfController == undefined)
         continue;
 
       // allRoutesAdded++;
@@ -135,11 +136,11 @@ export class EasyServe {
      */
     let rootPath = process.cwd();
     let autoWiredClasses = fs.readdirSync(path.join(rootPath, option.root));
-    for ( let autoWiredClass of autoWiredClasses ) {
-      if ( !( autoWiredClass.endsWith("js") || autoWiredClass.endsWith("ts") ) )
+    for (let autoWiredClass of autoWiredClasses) {
+      if (!(autoWiredClass.endsWith("js") || autoWiredClass.endsWith("ts")))
         continue;
-      let nameOfClass = autoWiredClass.split('.')[ 0 ];
-      if ( nameOfClass == undefined )
+      let nameOfClass = autoWiredClass.split('.')[0];
+      if (nameOfClass == undefined)
         continue;
       await import(path.join(rootPath, option.root, nameOfClass));
     }

@@ -28,10 +28,10 @@ export interface EasyServeConfig {
   port?: string | number,
   controller: ControllerConfig,
   swagger?: SwaggerConfig
-  injectables: { root: string },
+  injectables?: { root: string },
   payloadLimit?: string,
   logger?: any,
-  key: string | undefined,
+  key?: string | undefined,
   service: string
 }
 
