@@ -51,11 +51,7 @@ export class EasyServe {
       EasyServe.logger = (await import("./src/util/Logger")).default
     } else EasyServe.logger = this.options.logger;
 
-    const corsOptions = {
-      origin: '*',
-      optionsSuccessStatus: 200,
-    };
-    EasyServe.app.use(cors(corsOptions));
+    EasyServe.app.use(cors(this.options.cors));
     EasyServe.app.use(ExpressApp.json({
       limit: this.options.payloadLimit || '1mb'
     }))

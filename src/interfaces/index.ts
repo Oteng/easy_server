@@ -1,3 +1,4 @@
+import { CorsOptions } from "cors";
 import { SwaggerUiOptions } from "swagger-ui-express";
 
 export interface ESResponseObject<T> {
@@ -33,6 +34,7 @@ export interface EasyServeConfig {
   logger?: any,
   key?: string | undefined,
   service: string
+  cors: CorsOptions
 }
 
 export interface SwaggerConfig {
