@@ -1,247 +1,182 @@
-Easy Server
+# Easy Server
+
 A lightweight Express.js framework with TypeScript decorators for rapid API development.
 
-📖 What This Actually Does
+## What This Actually Does
+
 Easy Server automatically:
+Scans your `controllers/` folder for files and then registers routes using decorators like `@GET`, `@POST`
 
-Scans your controllers/ folder for files
+example:
 
-Registers routes using decorators like @GET, @POST
+    //typescript
 
-Handles JWT authentication with @Auth()
+    @GET('/api/evaluation-schemas')
+    @Auth(['12'])
+    public async textRoute(req: any, res: any) {
+        try {
+            
+            // do some job
 
-Manages dependency injection with @Autowire and @Inject
+            return (new ESResponse(res)).setData(results.rows).send();
+        } catch (e) {
+            EasyServe.logger.error(e);
+            return (new ESResponse(res)).setStatus("false").setData(e).send();
+        }
+    }
+    
+### Authentication and Authorization
 
-Generates API documentation at /api-docs
+EasyServer comes with built in authentication and authorization mechanism.
+We use JWT as the default authorization mechanism. For generating a JWT token please check out starter_project.
+Authorization is configured using `@Auth()`. `@Auth()` takes an array of 
+strings which is treated as permissions. The values should be found in the permission payload of the JWT token before access will be granted to the route.
 
-🏗️ REAL WORKING EXAMPLE
-FILE 1: Create a Service (services/UserService.ts)
-Create this file in: services/ folder
+### Dependency Injection
 
-typescript
-// services/UserService.ts
-import { Autowire } from 'easy_server';
+EasyServer have a dependency injection system that allows you inject objects into your controllers easily using `@Autowire` and `@Inject`.
 
-@Autowire('UserService') // Registers this as an injectable service
-export class UserService {
+`@Autowire('ServiceName')`- Register class as injectable service
 
-// REQUIRED: This method is called when the service is registered
-public static configure() {
-return new UserService();
-}
+`@Inject('ServiceName', 'propertyName')` - Inject service into static property
 
-getUsers() {
-return [
-{ id: 1, name: 'Alice' },
-{ id: 2, name: 'Bob' }
-];
-}
-}
-FILE 2: Create a Controller (controllers/UserController.ts)
-Create this file in: controllers/ folder
+Example:
 
-typescript
-// controllers/UserController.ts
-import { GET, POST, Auth, Inject } from 'easy_server';
-import { Request, Response } from 'express';
-import { UserService } from '../services/UserService';
+    //typescript
 
-export class UserController {
+    //setup an injectable
+    import { Autowire } from "easy_server/src/annotations/Autowire";
+    import { Injectable } from "easy_server/src/interfaces";
+    import { Pool } from 'pg'
+    import { EasyServe } from "easy_server";
+    import { AuditEvent } from "@/core/interfaces";
+    import * as process from "node:process";
 
-// Inject UserService into this static property
-@Inject('UserService', 'userService')
-static userService: UserService;
+    @Autowire("PostgresDB")
+    export class PostgresDB implements Injectable {
 
-// Public endpoint: GET /api/users
-@GET('/api/users')
-static getAllUsers(req: Request, res: Response) {
-const users = UserController.userService.getUsers();
-res.json(users);
-}
+        private readonly pool: Pool;
 
-// Protected endpoint: POST /api/users (requires JWT)
-@POST('/api/users')
-@Auth() // Requires valid JWT token
-static createUser(req: Request, res: Response) {
-const newUser = req.body;
-res.status(201).json({ message: 'User created', user: newUser });
-}
+        static configure(): any {
+            return new PostgresDB();
+        }
 
-// Protected with permissions: GET /api/users/admin
-@GET('/api/users/admin')
-@Auth(['admin']) // Requires 'admin' permission in JWT
-static getAdminUsers(req: Request, res: Response) {
-res.json({ message: 'Admin users only' });
-}
-}
-FILE 3: Create Server Entry Point (server.ts)
-Create this file in: Project ROOT folder (same as package.json)
+        constructor() {
+            this.pool = new Pool({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            port: 5432,
+            max: 20,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 20000,
+            })
+        }
 
-typescript
-// server.ts
-import { EasyServe } from 'easy_server';
+        getPool(): Pool {
+            return this.pool;
+        }
 
-const server = new EasyServe({
-port: 3000, // Server runs on port 3000
-key: 'your-jwt-secret-key', // REQUIRED: For JWT encryption
-service: 'My API Service', // Optional: Service name
-controller: {
-root: './controllers' // REQUIRED: Where controllers are
-},
-swagger: {
-url: '/api-docs', // Swagger UI URL
-spec: require('./swaggerSpec.json')
-}
-});
+        async query(text: string, params: Array<any>, event?: AuditEvent) {
+            let res: any;
+            if (process.env.NODE_ENV === 'development') {
+                const start = Date.now()
+                res = await this.pool.query(text, params)
+                const duration = `${Date.now() - start}ms`;
+                EasyServe.logger.info(JSON.stringify({ sql: (text.replace(/\s+/g, ' ').trim()), duration, rows: res.rowCount }));
+            } else {
+                res = await this.pool.query(text, params)
+            }
 
-server.start();
-console.log('✅ Server running: http://localhost:3000');
-console.log('📚 API Docs: http://localhost:3000/api-docs');
-🗂️ PROJECT STRUCTURE
-text
-your-project/
-├── controllers/ # YOUR controller files go here
-│ └── UserController.ts
-├── services/ # YOUR service files go here
-│ └── UserService.ts
-├── src/ # FRAMEWORK source (don't touch)
-│ ├── annotations/ # @GET, @POST, @Auth decorators
-│ ├── interfaces/ # TypeScript interfaces
-│ └── util/ # Utility functions
-├── server.ts # YOUR server startup file
-├── package.json # Dependencies
-└── tsconfig.json # TypeScript config
-🛠️ STEP-BY-STEP SETUP GUIDE
-STEP 1: Install Dependencies
-bash
-npm install
-What this does: Installs Express.js, JWT, Swagger, and all required packages.
+            if (event)
+                this.pool.query(`INSERT INTO tl_audit_log (event_type, event, tl_school_id, tl_user_id)
+                                VALUES ($1, $2, $3,
+                                        $4)`, [event.event_type, event.event, event.tl_school_id, event.tl_user_id]).then(() => {
+                }).catch(e => {
+                    EasyServe.logger.error(JSON.stringify(e))
+                })
 
-STEP 2: Build TypeScript
-bash
-npm run build
-What this does: Compiles TypeScript (.ts) files to JavaScript (.js) in dist/ folder.
+            return res
+        }
 
-STEP 3: Create Required Folders
-bash
-mkdir controllers services
-What this does: Creates folders where YOUR code goes.
 
-STEP 4: Create Server File
-bash
+        async initTransaction(fun: Function) {
+            const client = await this.pool.connect();
+            try {
+                await client.query('BEGIN')
+                await fun(client)
+                await client.query('COMMIT')
+            } catch (e: any) {
+                await client.query('ROLLBACK')
+                EasyServe.logger.error(e)
+                throw new Error(`${e.message}||${e.detail}||${e.code}||${e.table}`)
+            } finally {
+                client.release()
+            }
+        }
+    }
+    
+    // Injecting the class
+    @Inject("PostgresDB", "postgresDB")
+    export class SomeClass {
 
-# Create server.js in root folder
+        private static postgresDB: PostgresDB;
 
-cat > server.js << 'EOF'
-const { EasyServe } = require('./dist/index');
+        @GET("/api/some/route")
+        public async doSomething(req: any, res: any) {
+            try {
+                const { classId } = req.params;
+                const { date } = req.q
+                SomeClass.postgresDB.query(``, [])
+                //...
+            }catch(e){
+                return (new ESResponse(res))
+                .setStatus("false")
+                .setData({ message: 'Failed to fetch attendance records' })
+                .send(500);
+            }
+        }
+    }
 
-const server = new EasyServe({
-port: 3000,
-key: 'my-secret-key-123',
-controller: { root: './controllers' }
-});
+## AVAILABLE DECORATORS
 
-server.start();
-console.log('Server: http://localhost:3000');
-EOF
-STEP 5: Create a Simple Controller
-bash
+*Express.js routes is that is used*
 
-# Create controllers/HelloController.js
-
-cat > controllers/HelloController.js << 'EOF'
-const { GET } = require('../src/annotations/get');
-
-class HelloController {
-@GET('/hello')
-static sayHello(req, res) {
-res.json({ message: 'Hello World!' });
-}
-}
-
-module.exports = HelloController;
-EOF
-STEP 6: Run the Server
-bash
-node server.js
-STEP 7: Test in Browser
-Open: http://localhost:3000/hello
-
-🔧 AVAILABLE DECORATORS
 HTTP Method Decorators (in src/annotations/)
-@GET('/path') - Handle GET requests
+`@GET('/path')`- Handle GET requests
 
-@POST('/path') - Handle POST requests
+`@POST('/path')` - Handle POST requests
 
-@PUT('/path') - Handle PUT requests
+`@PUT('/path')` - Handle PUT requests
 
-@DELETE('/path') - Handle DELETE requests
+`@DELETE('/path')` - Handle DELETE requests
 
-@PATCH('/path') - Handle PATCH requests
+`@PATCH('/path')` - Handle PATCH requests
 
-@OPTIONS('/path') - Handle OPTIONS requests
+`@OPTIONS('/path')` - Handle OPTIONS requests
 
-@HEAD('/path') - Handle HEAD requests
+`@HEAD('/path')` - Handle HEAD requests
 
 Authentication Decorator
-@Auth() - Requires valid JWT token
+`@Auth()` - Requires valid JWT token
 
-@Auth(['admin', 'write']) - Requires specific permissions
+`@Auth(['admin', 'write'])`- Requires specific permissions
 
-Dependency Injection
-@Autowire('ServiceName') - Register class as injectable service
+### EasyServer Options
 
-@Inject('ServiceName', 'propertyName') - Inject service into static property
-
-❗ COMMON ERRORS & FIXES
-Error What's Wrong Fix
-JWT ENCRYPTION KEY not provied Missing key in config Add key: 'your-secret'
-Cannot read properties of undefined (reading 'root') Missing controller config Add controller: { root: './controllers' }
-startServer is not a function Wrong method name Use server.start() not startServer()
-EasyServer is not a constructor Wrong class name Use EasyServe not EasyServer
-🔐 HOW AUTHENTICATION WORKS
-Login: User gets JWT token from /login endpoint
-
-Request: Token sent in header: Authorization: Bearer <token>
-
-Validation: @Auth() checks token validity
-
-Access: If valid, user data added to req.body.user
-
-Permissions: @Auth(['admin']) checks user has 'admin' permission
-
-📊 DEPENDENCY INJECTION FLOW
-typescript
-// 1. SERVICE registers itself
-@Autowire('DatabaseService')
-class DatabaseService {
-static configure() { return new DatabaseService(); }
-}
-
-// 2. CONTROLLER injects the service
-@Inject('DatabaseService', 'db')
-class UserController {
-static db: DatabaseService;
-
-@GET('/users')
-static getUsers() {
-return UserController.db.query(); // Use injected service
-}
-}
-📝 REAL PROJECT CHECKLIST
-Run npm install
-
-Run npm run build
-
-Create controllers/ and services/ folders
-
-Create server.js with EasyServe config
-
-Create at least one controller file
-
-Run node server.js
-
-Test: http://localhost:3000
+    EasyServeConfig {
+        port?: string | number,
+        controller: ControllerConfig,
+        swagger?: SwaggerConfig
+        injectables?: { root: string },
+        payloadLimit?: string,
+        logger?: any,
+        key?: string | undefined,
+        service: string
+        cors: CorsOptions,
+        behindProxy?: boolean
+    }
 
 📜 LICENSE
 ISC License
