@@ -9,6 +9,8 @@ Scans your `controllers/` folder for files and then registers routes using decor
 
 example:
 
+    //typescript
+
     @GET('/api/evaluation-schemas')
     @Auth(['12'])
     public async textRoute(req: any, res: any) {
@@ -34,7 +36,13 @@ strings which is treated as permissions. The values should be found in the permi
 
 EasyServer have a dependency injection system that allows you inject objects into your controllers easily using `@Autowire` and `@Inject`.
 
+`@Autowire('ServiceName')`- Register class as injectable service
+
+`@Inject('ServiceName', 'propertyName')` - Inject service into static property
+
 Example:
+
+    //typescript
 
     //setup an injectable
     import { Autowire } from "easy_server/src/annotations/Autowire";
@@ -131,12 +139,12 @@ Example:
         }
     }
 
-## AVAILABLE DECORATORS 
+## AVAILABLE DECORATORS
 
 *Express.js routes is that is used*
 
 HTTP Method Decorators (in src/annotations/)
-`@GET('/path') `- Handle GET requests
+`@GET('/path')`- Handle GET requests
 
 `@POST('/path')` - Handle POST requests
 
@@ -153,13 +161,7 @@ HTTP Method Decorators (in src/annotations/)
 Authentication Decorator
 `@Auth()` - Requires valid JWT token
 
-`@Auth(['admin', 'write']) `- Requires specific permissions
-
-### Dependency Injection
-
-`@Autowire('ServiceName') `- Register class as injectable service
-
-`@Inject('ServiceName', 'propertyName')` - Inject service into static property
+`@Auth(['admin', 'write'])`- Requires specific permissions
 
 ### EasyServer Options
 
