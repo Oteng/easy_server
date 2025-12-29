@@ -1,7 +1,7 @@
 import { Request, Response } from "express-serve-static-core";
 import { JWT } from "../util/JWT";
 import { ESResponse } from "../util/Response";
-import { EasyServe } from "index";
+import { EasyServe } from "../../index";
 
 
 export const Auth = (permissions?: String[]) => {

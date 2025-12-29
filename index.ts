@@ -59,7 +59,7 @@ export class EasyServe {
     EasyServe.app.use(ExpressApp.json({
       limit: this.options.payloadLimit || '1mb'
     }))
-    this.serverInstance = EasyServe.app.listen(this.options.port || 8018)
+    this.serverInstance = EasyServe.app.listen(Number(this.options.port) || 8018, this.options.host || 'localhost')
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
@@ -70,7 +70,7 @@ export class EasyServe {
       await this.loadAutoWire(this.options.injectables);
     await this.setControllerConfig(this.options.controller);
 
-    EasyServe.logger.info(`Application started on http://localhost:${this.options.port}`)
+    EasyServe.logger.info(`Application started on http://${this.options.host || 'localhost'}:${this.options.port}`)
 
     //log every route that get called
     if (process.env.NODE_ENV !== 'production') {
