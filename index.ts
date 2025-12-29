@@ -7,6 +7,7 @@ import * as SwaggerSpec from './swaggerSpec.json'
 import cors from "cors"
 import helmet from "helmet";
 import { InjectableException } from "./src/Exceptions/InjectableException";
+import winston from "winston";
 // import { ErrorRequestHandler, Express } from "express-serve-static-core";
 // import { DBConnector } from "../src/model/BaseModel";
 
@@ -14,7 +15,7 @@ import { InjectableException } from "./src/Exceptions/InjectableException";
 export class EasyServe {
   private static readonly app: Express = ExpressApp();
   private static inject: { [key: string]: Injectable } = {};
-  public static logger: any
+  public static logger: winston.Logger | any;
   private options: EasyServeConfig;
   private serverInstance: any;
   static key: string
