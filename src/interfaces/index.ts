@@ -34,7 +34,8 @@ export interface EasyServeConfig {
   logger?: any,
   key?: string | undefined,
   service: string
-  cors: CorsOptions
+  cors: CorsOptions,
+  behindProxy?: boolean
 }
 
 export interface SwaggerConfig {

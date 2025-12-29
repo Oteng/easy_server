@@ -27,6 +27,9 @@ export class EasyServe {
       EasyServe.key = option.key
     else throw new Error("JWT ENCRYPTION KEY not provied")
     EasyServe.service = option.service
+    if (option.behindProxy === true) {
+      EasyServe.app.set('trust proxy', true);
+    }
   }
 
   public static getInjectable(name: string): Injectable {
