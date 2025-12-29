@@ -26,6 +26,7 @@ export interface JWTPayload extends Record<string, any>{
 }
 
 export interface EasyServeConfig {
+  host?: string,
   port?: string | number,
   controller: ControllerConfig,
   swagger?: SwaggerConfig
