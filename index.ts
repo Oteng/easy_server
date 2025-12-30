@@ -59,7 +59,11 @@ export class EasyServe {
     EasyServe.app.use(ExpressApp.json({
       limit: this.options.payloadLimit || '1mb'
     }))
-    this.serverInstance = EasyServe.app.listen(Number(this.options.port) || 8018, this.options.host || 'localhost')
+
+    if (this.options.host)
+      this.serverInstance = EasyServe.app.listen(Number(this.options.port) || 8018, this.options.host);
+    else
+      this.serverInstance = EasyServe.app.listen(Number(this.options.port) || 8018);
 
     EasyServe.app.use(helmet())
     EasyServe.app.disable('x-powered-by')
