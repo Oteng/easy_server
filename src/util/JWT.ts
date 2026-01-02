@@ -5,7 +5,7 @@ import { EasyServe } from "../../index";
 
 export class JWT {
   // private static secret:
-  public static async generate(payload: JWTPayload): Promise<string> {
+  public static async generate<T extends string | object | Buffer<ArrayBufferLike>>(payload: T): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       jwt.sign(payload, EasyServe.key,
         {
