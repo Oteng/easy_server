@@ -2,6 +2,8 @@
 
 A lightweight Express.js framework with TypeScript decorators for rapid API development.
 
+*Check the `example` folder to see to use this package*
+
 ## What This Actually Does
 
 Easy Server automatically:
@@ -39,6 +41,12 @@ EasyServer have a dependency injection system that allows you inject objects int
 `@Autowire('ServiceName')`- Register class as injectable service
 
 `@Inject('ServiceName', 'propertyName')` - Inject service into static property
+
+#### How it works
+
+At start up time, the server engine instantiate all the autowired classes and inject them into the class that needs them. 
+It is assumed that the class is a singleton and it is treated as such. A single object is created and that object is used through 
+out the life of the server.
 
 Example:
 
@@ -178,5 +186,6 @@ Authentication Decorator
         behindProxy?: boolean
     }
 
-📜 LICENSE
+## LICENSE
+
 ISC License
