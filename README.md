@@ -2,7 +2,7 @@
 
 A lightweight Express.js framework with TypeScript decorators for rapid API development.
 
-*Check the `example` folder to see to use this package*
+*Check the `example` folder for sample app*
 
 ## What This Actually Does
 
